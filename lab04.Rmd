@@ -1,0 +1,41 @@
+---
+title: "Lab 4"
+author: "Tim Lanthier"
+date: "2/9/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(knitr)
+library(broom)
+```
+
+# Lab 4: Analysis of Variance
+## Exploratory Data Analysis
+1. Dataset is the `diamonds` dataset from the ggplot2 package. For this analysis, we will only consider diamonds with a carat weight of 0.5.
+```{r}
+filtered_data <- diamonds %>% subset(carat == 0.5)
+glimpse(filtered_data)
+```
+It looks like we now have 1,258 observations in our filtered dataset.
+```{r}
+ggplot(filtered_data, aes(cut)) +
+  geom_bar() +
+  labs(x = 'Cut', title = 'Distribution of Cut')
+```
+
+2. According to the above plot, we have the fewest number of diamonds with a fair or good cut. To address this, we will combine the fair and good cut categories so the distribution between various cuts are more uniform.
+
+```{r}
+filtered_data <- filtered_data %>%
+  mutate(cut = fct_lump_n(cut, 3, other_level = 'Fair/Good'))
+```
+
+```{r}
+ggplot(filtered_data, aes(cut)) +
+  geom_bar() +
+  labs(x = 'Cut', title = 'Distribution of Cut')
+```
+
