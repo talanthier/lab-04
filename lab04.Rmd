@@ -14,7 +14,7 @@ library(broom)
 
 # Lab 4: Analysis of Variance
 ## Exploratory Data Analysis
-1. Dataset is the `diamonds` dataset from the ggplot2 package. For this analysis, we will only consider diamonds with a carat weight of 0.5.
+Dataset is the `diamonds` dataset from the ggplot2 package. For this analysis, we will only consider diamonds with a carat weight of 0.5.
 ```{r}
 filtered_data <- diamonds %>% subset(carat == 0.5)
 glimpse(filtered_data)
@@ -26,7 +26,7 @@ ggplot(filtered_data, aes(cut)) +
   labs(x = 'Cut', title = 'Distribution of Cut')
 ```
 
-2. According to the above plot, we have the fewest number of diamonds with a fair or good cut. To address this, we will combine the fair and good cut categories so the distribution between various cuts are more uniform.
+According to the above plot, we have the fewest number of diamonds with a fair or good cut. To address this, we will combine the fair and good cut categories so the distribution between various cuts are more uniform.
 
 ```{r}
 filtered_data <- filtered_data %>%
@@ -38,4 +38,22 @@ ggplot(filtered_data, aes(cut)) +
   geom_bar() +
   labs(x = 'Cut', title = 'Distribution of Cut')
 ```
+According to the above bar chart, it looks like we have successfully lumped all fair and good cut diamonds into a single category. Now we will investigate the relationship between diamond cut and its price.
+```{r}
+ggplot(filtered_data, aes(cut,price)) +
+  geom_boxplot() +
+  coord_flip() + 
+  labs(x = 'Cut', y = 'Price', title = 'Diamond Cut vs Price')
+```
+```{r}
+filtered_data %>% group_by(cut) %>% 
+  summarise(mean_price = mean(price),
+            std_dev_price = sd(price))
+```
+Looking at the above plots and summary statistics it is reasonable to assume that there may be some relationship between price of diamonds and its cut. We can see this as the mean prices for diamonds with a premium or ideal cut lie quite far above diamonds with fair or good cuts. This is supported by our boxplot as the upper 75% of diamonds with premium cut have prices which lie above the mean price for diamonds with fair/good cut. Of course this only applies to diamonds which are 0.5 carats since we removed all other diamonds from the dataset.
+
+## Analysis of Variance
+
+
+
 
