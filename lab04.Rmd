@@ -48,12 +48,64 @@ ggplot(filtered_data, aes(cut,price)) +
 ```{r}
 filtered_data %>% group_by(cut) %>% 
   summarise(mean_price = mean(price),
-            std_dev_price = sd(price))
+            std_dev_price = sd(price),
+            num_obs = n())
 ```
 Looking at the above plots and summary statistics it is reasonable to assume that there may be some relationship between price of diamonds and its cut. We can see this as the mean prices for diamonds with a premium or ideal cut lie quite far above diamonds with fair or good cuts. This is supported by our boxplot as the upper 75% of diamonds with premium cut have prices which lie above the mean price for diamonds with fair/good cut. Of course this only applies to diamonds which are 0.5 carats since we removed all other diamonds from the dataset.
 
 ## Analysis of Variance
 
+We will start with the normality assumption. Looking at the plot below, grouped by cut, most of the distributions look reasonably bell curve shaped. All four histograms are unimodal but a few lack the symmetry. For example, 'Very Good' cut diamonds have a spike around the \$1200 price mark as well as around \$1500. That being said, we would say the shape is mostly bell curve like so we would say the normality condition is satisfied. 
+
+```{r}
+ggplot(filtered_data, aes(x = price)) +
+  geom_histogram(bins = 20) +
+  facet_wrap(~cut) + 
+  labs(title = 'Price of Diamonds by Cut')
+```
+As for constant variance, this condition is also satisfied. Looking at the summary statistics we calculated earlier, the standard deviations for price within each group lies relatively close to each other. For example, the price of diamonds with very good, ideal, and fair/good cuts have standard deviations 339.363, 368.345, and 364.522 respectively. While premium diamonds have a lower standard deviation of 304.144, this is still quite close to the standard deviations of the other groups. So since the standard deviations (and hence the variances) between groups are similar, we would conclude that the constant variance condition is satisfied.
+
+```{r}
+ggplot(data = filtered_data, aes(x = seq.int(nrow(filtered_data)), y = price)) + 
+  geom_point() +
+  labs(x = 'Index', y= 'Price', title = 'Price vs Index of Data')
+```
+
+For checking independence, we have no knowledge as to how the data was collected. Just looking to see if there is any relationship as to how the data was ordered, we can plot the price against the rows in which the observations appeared. The plot is shown above and shows there is a clear relationship between how the data was ordered and the diamond price. Of course, it is possible that the dataset was sorted based off of price after the data was collected, but since we do not know how the data was collected, we would claim that the independence condition is violated. If the observations were put into the dataset as it was collected, then the diamonds sampled before clearly affect the diamonds sampled later.
+
+```{r}
+cut_model <- lm(price ~ cut, data = filtered_data)
+
+anova(cut_model) %>% kable(format = 'markdown', digits = 3)
+```
+The sample variance for price includes the variation within each group as well the variation between groups. From the ANOVA table we find the total sum of squares to be $\text{SST} = 11507056 + 150706506 = 162213562$ and the total degrees of freedom is $\text{DFT} = 1254+ 3 = 1257$. Hence we can find the sample variance of price to be
+\[s_y^2 = \frac{\text{SST}}{\text{DFT}} = \frac{162213562}{1257} = 129048.2\]
+We can quickly verify this
+```{r}
+var(x = filtered_data$price)
+```
+```{r}
+filtered_data %>% group_by(cut) %>% summarize(Variance = var(price))
+```
+Looking at the above table, we can find the sample variance for price within each of the 4 levels of cut. As for the ANOVA, we have the two following hypotheses:
+\begin{align*}
+  &H_0: \mu_1 = \mu_2 = \mu_3 = \mu_4 \\
+  &H_a: \mu_i \neq \mu_j \text{ for some } i \neq j
+\end{align*}
+where $\mu_1,\mu_2, \mu_3,\mu_4$ are the true population means for price within each of the 4 levels of cut. Intepreting these, the null hypothesis states that the true population mean price of diamonds is the same between groups of diamond cut. The alternate hypothesis states that there is at least one group whose true mean diamond price differs from the true mean diamond price of another diamond cut.
+
+Looking at the ANOVA table, we have a large F value and a very small corresponding p-value. Our p-value is small enough that we cannot express it with 3 digits of precision. Since the p-value is so small, we have sufficient evidence to reject the null hypothesis that there is no difference in true mean price between groups of diamonds based on cut.
+
+So we have evidence that the mean price for diamonds within a level of cut is different from the mean price within another level of cut. Now we will investigate which means significantly differ from one another.
+
+## Further Analysis
+
+In order to verify which means in particular are different from one another, we will conduct a few t tests pairwise. Seeing as we have 4 levels for `cut` (Fair/Good,Very Good, Ideal, Premium) we will need to conduct ${4 \choose 2} = 6$ t tests in order to cover all cases.
+
+
+```{r}
+
+```
 
 
 
