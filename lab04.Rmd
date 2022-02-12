@@ -2,7 +2,9 @@
 title: "Lab 4"
 author: "Tim Lanthier"
 date: "2/9/2022"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -12,7 +14,10 @@ library(knitr)
 library(broom)
 ```
 
-# Lab 4: Analysis of Variance
+# STAT 108: Analysis of Variance
+
+Github Repository: https://github.com/talanthier/lab-04
+
 ## Exploratory Data Analysis
 Dataset is the `diamonds` dataset from the ggplot2 package. For this analysis, we will only consider diamonds with a carat weight of 0.5.
 ```{r}
@@ -71,7 +76,7 @@ ggplot(data = filtered_data, aes(x = seq.int(nrow(filtered_data)), y = price)) +
   labs(x = 'Index', y= 'Price', title = 'Price vs Index of Data')
 ```
 
-For checking independence, we have no knowledge as to how the data was collected. Just looking to see if there is any relationship as to how the data was ordered, we can plot the price against the rows in which the observations appeared. The plot is shown above and shows there is a clear relationship between how the data was ordered and the diamond price. Of course, it is possible that the dataset was sorted based off of price after the data was collected, but since we do not know how the data was collected, we would claim that the independence condition is violated. If the observations were put into the dataset as it was collected, then the diamonds sampled before clearly affect the diamonds sampled later.
+For checking independence, we have no knowledge as to how the data was collected. Just looking to see if there is any relationship as to how the data was ordered, we can plot the price against the rows in which the observations appeared. The plot is shown above and shows there is a clear relationship between how the data was ordered and the diamond price. Of course, it is possible that the dataset was sorted based off of price after the data was collected, but since we do not know how the data was collected, we cannot be sure that the observations are independent. Hence we shall consider the independence assumption violated. If the observations were put into the dataset as it was collected, then the observations are dependent on adjacent observations.
 
 ```{r}
 cut_model <- lm(price ~ cut, data = filtered_data)
@@ -100,12 +105,58 @@ So we have evidence that the mean price for diamonds within a level of cut is di
 
 ## Further Analysis
 
-In order to verify which means in particular are different from one another, we will conduct a few t tests pairwise. Seeing as we have 4 levels for `cut` (Fair/Good,Very Good, Ideal, Premium) we will need to conduct ${4 \choose 2} = 6$ t tests in order to cover all cases.
+In order to verify which means in particular are different from one another, we will conduct a few t tests pairwise. Seeing as we have 4 levels for `cut` (Fair/Good,Very Good, Ideal, Premium) we will need to conduct ${4 \choose 2} = 6$ t tests in order to cover all cases. We can start by filtering the diamonds into 4 separate datasets based on `cut`.
 
 
 ```{r}
+fair_good_diamonds <- filtered_data %>% filter(cut == 'Fair/Good')
+very_good_diamonds <- filtered_data %>% filter(cut == 'Very Good')
+ideal_diamonds <- filtered_data %>% filter(cut == 'Ideal')
+premium_diamonds <- filtered_data %>% filter(cut == 'Premium')
+```
+### Fair/Good vs Very Good Cut Diamonds
+Now we will conduct the t tests. We will start with comparing the groups Fair/Good and Very Good for cut.
+
+```{r}
+t.test(fair_good_diamonds$price, very_good_diamonds$price)
 
 ```
+According to our 2 sample t test, seeing as we have a very small p-value, we have sufficient evidence to reject the null hypothesis that the difference in means is nonzero. This is supported by our 95\% confidence interval which says we are 95\% confidence that the difference in the true mean price between the groups lies in the interval (-205.491, -90.546). This confidence interval suggests that we are confident that the true mean price of diamonds with Very Good cut is higher than the true mean price of Fair/Good cut diamonds. We can repeat this analysis for the other pairs of groups.
+
+### Fair/Good vs Ideal Cut Diamonds
+```{r}
+t.test(fair_good_diamonds$price, ideal_diamonds$price)
+```
+Once again, we have an extremely small p-value. Thus we reject the null hypothesis that the mean price for fair/good cut diamonds is the same as the mean price for ideal cut diamonds. This is supported by the 95\% confidence interval (-325.585, -210.4629) as 0 does not lie within the confidence interval. Also, by this confidence interval we are 95\% confident that the true mean difference in price of fair/good cut diamonds and ideal cut diamonds lies between (-325.585, -210.4629). 
+
+### Fair/Good vs Premium Cut Diamonds
+```{r}
+t.test(fair_good_diamonds$price, premium_diamonds$price)
+```
+Seeing as we have such a small p-value we have sufficient evidence to reject the hypothesis that the true difference in mean price between fair/good cut diamonds and premium cut diamonds is 0. From the 95\% confidence interval, we can conclude that the true difference lies in the interval (-248.177, -134.0881). So we are confident that the true mean price for premium cut diamonds is higher than the true mean price for fair/good cut diamonds.
+
+### Very Good vs Ideal Cut Diamonds
+```{r}
+t.test(very_good_diamonds$price, ideal_diamonds$price)
+```
+Seeing as we have a very small p-value, we have sufficient evidence to reject the null hypothesis that the mean price of very good cut diamonds does not differ from ideal cut diamonds. Looking at the confidence interval, we are 95\% confident that the true difference in mean price between the 2 groups lies between -171.821 and -68.188. Hence we have sufficient evidence that the true mean price in ideal diamonds lies above the true mean price of very good diamonds.
+
+### Very Good vs Premium Cut Diamonds
+```{r}
+t.test(very_good_diamonds$price, premium_diamonds$price)
+```
+Here we have a p-value of 0.099. At the $\alpha = 0.05$ significance level, since 0.099 > 0.05, we do not have sufficient evidence to reject the null hypothesis that the true mean price of very good cut diamonds is different from the true mean price of premium cut diamonds. We also have a 95\% confidence interval of (-94.357, 8.13). This supports our rejection of the null hypothesis as our confidence interval contains 0. So we cannot state that there is a statistically significant difference in price between very good cut diamonds and premium cut diamonds.
+
+### Ideal vs Premium Cut Diamonds
+```{r}
+t.test(ideal_diamonds$price, premium_diamonds$price)
+```
+Seeing as we have a p-value of 0.003, at the $\alpha =0.05$ significance level, we have sufficient evidence to reject the null hypothesis that the mean price of ideal cut diamonds is the same as the true mean price of premium cut diamonds. Looking at our confidence interval, we have a 95\% confidence interval of (25.55, 128.233). Hence, we are 95\% confident that the true mean price of ideal cut diamonds is higher than the true mean price of premium cut diamonds with a difference between \$25.549 and \$128.233.
+
+Now we have covered all of the pairs of groups. To summarize, the only groups whose means are not significantly different from one another are Ideal and Premium cut diamonds as well as Very Good and Premium Cut diamonds.
+
+
+
 
 
 
